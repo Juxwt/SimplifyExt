@@ -11,7 +11,13 @@
   "content_scripts": [
     {
       "matches": ["<all_urls>"],
-      "js": ["scripts/content.js"]
+      "js": [
+        "scripts/modules/audio-player.js",
+        "scripts/modules/fab.js",
+        "scripts/modules/overlay.js",
+        "scripts/modules/action-finder.js",
+        "scripts/content.js"
+      ]
     }
   ],
   "action": {
