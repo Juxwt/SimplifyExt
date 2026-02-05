@@ -2,6 +2,21 @@
 (function() {
   window.SimplifyOverlay = {
     API_BASE_URL: 'https://simplify-ext.vercel.app',
+    currentTheme: 'light', // light, sepia
+    fontSize: 18, // base font size in px
+
+    themes: {
+      light: {
+        bgColor: '#FAF7F0',
+        textColor: '#333',
+        headingColor: '#1a1a1a'
+      },
+      sepia: {
+        bgColor: '#F5E6D3',
+        textColor: '#4a3f2f',
+        headingColor: '#2d2416'
+      }
+    },
 
     show: async function() {
       // Check if overlay already exists
@@ -13,6 +28,10 @@
       // Add close button
       const closeBtn = this._createCloseButton(overlay);
       panel.appendChild(closeBtn);
+
+      // Add theme toggle
+      const themeToggle = this._createThemeToggle();
+      panel.appendChild(themeToggle);
 
       // Add TL;DR section
       const tldr = this._createTLDRSection();
@@ -64,8 +83,11 @@
     },
 
     _createPanel: function() {
+      const theme = this.themes[this.currentTheme];
+      
       const panel = document.createElement('div');
-      panel.style.backgroundColor = '#ffffff';
+      panel.id = 'simplify-panel';
+      panel.style.backgroundColor = theme.bgColor;
       panel.style.width = '100%';
       panel.style.maxHeight = '60%';
       panel.style.borderRadius = '14px 14px 0 0';
@@ -74,10 +96,13 @@
       panel.style.overflowY = 'auto';
       panel.style.animation = 'slideUp 0.3s ease-out';
       panel.style.position = 'relative';
+      panel.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
       return panel;
     },
 
     _createCloseButton: function(overlay) {
+      const theme = this.themes[this.currentTheme];
+      
       const closeBtn = document.createElement('button');
       closeBtn.innerText = '✕';
       closeBtn.style.position = 'absolute';
@@ -87,7 +112,7 @@
       closeBtn.style.border = 'none';
       closeBtn.style.fontSize = '24px';
       closeBtn.style.cursor = 'pointer';
-      closeBtn.style.color = '#666';
+      closeBtn.style.color = theme.textColor;
       closeBtn.addEventListener('click', () => {
         window.SimplifyAudioPlayer.stopSpeech();
         document.body.removeChild(overlay);
@@ -95,7 +120,163 @@
       return closeBtn;
     },
 
+    _createThemeToggle: function() {
+      const themeContainer = document.createElement('div');
+      themeContainer.style.display = 'flex';
+      themeContainer.style.alignItems = 'center';
+      themeContainer.style.gap = '8px';
+      themeContainer.style.marginBottom = '16px';
+      themeContainer.style.paddingBottom = '16px';
+      themeContainer.style.borderBottom = '1px solid rgba(0, 0, 0, 0.1)';
+      
+      const label = document.createElement('span');
+      label.innerText = 'Theme:';
+      label.style.fontSize = '14px';
+      label.style.color = this.themes[this.currentTheme].textColor;
+      label.style.marginRight = '4px';
+      label.style.flexShrink = '0';
+      
+      const themes = [
+        { name: 'light', emoji: '☀️', label: 'Light' },
+        { name: 'sepia', emoji: '📜', label: 'Sepia' }
+      ];
+      
+      themeContainer.appendChild(label);
+      
+      for (const themeOption of themes) {
+        const btn = document.createElement('button');
+        btn.innerHTML = `${themeOption.emoji} ${themeOption.label}`;
+        btn.style.padding = '6px 12px';
+        btn.style.fontSize = '13px';
+        btn.style.border = this.currentTheme === themeOption.name ? '2px solid #1976d2' : '1px solid #ccc';
+        btn.style.borderRadius = '6px';
+        btn.style.cursor = 'pointer';
+        btn.style.backgroundColor = this.currentTheme === themeOption.name ? '#e3f2fd' : 'transparent';
+        btn.style.color = this.themes[this.currentTheme].textColor;
+        btn.style.transition = 'all 0.2s';
+        
+        btn.addEventListener('click', () => {
+          this.currentTheme = themeOption.name;
+          this._applyTheme();
+        });
+        
+        themeContainer.appendChild(btn);
+      }
+      
+      // Add font size controls
+      const fontSizeControl = this._createFontSizeControl();
+      themeContainer.appendChild(fontSizeControl);
+      
+      return themeContainer;
+    },
+
+    _applyTheme: function() {
+      const theme = this.themes[this.currentTheme];
+      
+      // Update panel background
+      const panel = document.getElementById('simplify-panel');
+      if (panel) {
+        panel.style.backgroundColor = theme.bgColor;
+      }
+      
+      // Update all headings
+      const headings = document.querySelectorAll('#simplify-overlay h1, #simplify-overlay h2');
+      for (const heading of headings) {
+        heading.style.color = theme.headingColor;
+      }
+      
+      // Update all text content
+      const texts = document.querySelectorAll('#simplify-overlay p, #simplify-overlay li, #simplify-overlay span');
+      for (const text of texts) {
+        if (!text.style.color || text.style.color.includes('666') || text.style.color.includes('555') || text.style.color.includes('333')) {
+          text.style.color = theme.textColor;
+        }
+      }
+      
+      // Update theme toggle
+      const themeButtons = document.querySelectorAll('#simplify-overlay button');
+      for (const btn of themeButtons) {
+        if (btn.innerText.includes('☀️') || btn.innerText.includes('📜')) {
+          const themeName = btn.innerText.includes('☀️') ? 'light' : 'sepia';
+          btn.style.border = this.currentTheme === themeName ? '2px solid #1976d2' : '1px solid #ccc';
+          btn.style.backgroundColor = this.currentTheme === themeName ? '#e3f2fd' : 'transparent';
+          btn.style.color = theme.textColor;
+        }
+      }
+    },
+
+    _createFontSizeControl: function() {
+      const container = document.createElement('div');
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.gap = '8px';
+      
+      const label = document.createElement('span');
+      label.innerText = 'Text Size:';
+      label.style.fontSize = '14px';
+      label.style.color = this.themes[this.currentTheme].textColor;
+      
+      const decreaseBtn = document.createElement('button');
+      decreaseBtn.innerText = 'A-';
+      decreaseBtn.style.padding = '6px 12px';
+      decreaseBtn.style.fontSize = '14px';
+      decreaseBtn.style.border = '1px solid #ccc';
+      decreaseBtn.style.borderRadius = '6px';
+      decreaseBtn.style.cursor = 'pointer';
+      decreaseBtn.style.backgroundColor = 'transparent';
+      decreaseBtn.style.color = this.themes[this.currentTheme].textColor;
+      decreaseBtn.style.transition = 'all 0.2s';
+      decreaseBtn.addEventListener('click', () => {
+        if (this.fontSize > 14) {
+          this.fontSize -= 2;
+          this._applyFontSize();
+        }
+      });
+      
+      const increaseBtn = document.createElement('button');
+      increaseBtn.innerText = 'A+';
+      increaseBtn.style.padding = '6px 12px';
+      increaseBtn.style.fontSize = '14px';
+      increaseBtn.style.border = '1px solid #ccc';
+      increaseBtn.style.borderRadius = '6px';
+      increaseBtn.style.cursor = 'pointer';
+      increaseBtn.style.backgroundColor = 'transparent';
+      increaseBtn.style.color = this.themes[this.currentTheme].textColor;
+      increaseBtn.style.transition = 'all 0.2s';
+      increaseBtn.addEventListener('click', () => {
+        if (this.fontSize < 26) {
+          this.fontSize += 2;
+          this._applyFontSize();
+        }
+      });
+      
+      container.appendChild(label);
+      container.appendChild(decreaseBtn);
+      container.appendChild(increaseBtn);
+      
+      return container;
+    },
+
+    _applyFontSize: function() {
+      // Update all content text
+      const paragraphs = document.querySelectorAll('#simplify-overlay p');
+      for (const p of paragraphs) {
+        if (p.style.fontSize) {
+          p.style.fontSize = this.fontSize + 'px';
+        }
+      }
+      
+      const lists = document.querySelectorAll('#simplify-overlay ul, #simplify-overlay li');
+      for (const list of lists) {
+        if (list.style.fontSize) {
+          list.style.fontSize = this.fontSize + 'px';
+        }
+      }
+    },
+
     _createTLDRSection: function() {
+      const theme = this.themes[this.currentTheme];
+      
       const tldr = document.createElement('div');
       tldr.id = 'tldr-section';
       tldr.style.marginBottom = '24px';
@@ -108,7 +289,7 @@
       
       const tldrTitle = document.createElement('h2');
       tldrTitle.style.fontSize = '24px';
-      tldrTitle.style.color = '#333';
+      tldrTitle.style.color = theme.headingColor;
       tldrTitle.style.margin = '0';
       tldrTitle.innerText = 'TL;DR';
       
@@ -128,7 +309,7 @@
           <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
             <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #1976d2 0%, #64b5f6 50%, #1976d2 100%); background-size: 200% 100%; animation: loadingBar 2.5s ease-in-out infinite;"></div>
           </div>
-          <span style="font-size: 14px; color: #666;">Loading...</span>
+          <span style="font-size: 14px; color: ${theme.textColor};">Loading...</span>
         </div>
       `;
       tldr.appendChild(tldrContent);
@@ -137,6 +318,8 @@
     },
 
     _createContentSection: function() {
+      const theme = this.themes[this.currentTheme];
+      
       const content = document.createElement('div');
       content.id = 'content-section';
       content.style.marginTop = '24px';
@@ -149,7 +332,7 @@
       
       const contentTitle = document.createElement('h2');
       contentTitle.style.fontSize = '24px';
-      contentTitle.style.color = '#333';
+      contentTitle.style.color = theme.headingColor;
       contentTitle.style.margin = '0';
       contentTitle.innerText = 'Content Summary';
       
@@ -169,7 +352,7 @@
           <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
             <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #1976d2 0%, #64b5f6 50%, #1976d2 100%); background-size: 200% 100%; animation: loadingBar 2.5s ease-in-out infinite;"></div>
           </div>
-          <span style="font-size: 14px; color: #666;">Loading...</span>
+          <span style="font-size: 14px; color: ${theme.textColor};">Loading...</span>
         </div>
       `;
       content.appendChild(contentBody);
@@ -263,6 +446,7 @@
       const tldrSection = document.getElementById('tldr-section');
       if (!tldrSection || !summaryPoints) return;
 
+      const theme = this.themes[this.currentTheme];
       const bulletPoints = summaryPoints.map(point => `<li>${point}</li>`).join('');
       
       const tldrHeader = document.createElement('div');
@@ -273,7 +457,7 @@
       
       const tldrTitle = document.createElement('h2');
       tldrTitle.style.fontSize = '24px';
-      tldrTitle.style.color = '#333';
+      tldrTitle.style.color = theme.headingColor;
       tldrTitle.style.margin = '0';
       tldrTitle.innerText = 'TL;DR';
       
@@ -305,12 +489,15 @@
       tldrHeader.appendChild(tldrListenBtn);
       
       const tldrList = document.createElement('ul');
-      tldrList.style.fontSize = '18px';
-      tldrList.style.lineHeight = '1.8';
-      tldrList.style.color = '#555';
+      tldrList.style.fontSize = this.fontSize + 'px';
+      tldrList.style.lineHeight = '1.6';
+      tldrList.style.color = theme.textColor;
       tldrList.style.listStyleType = 'disc';
+      tldrList.style.listStylePosition = 'outside';
       tldrList.style.paddingLeft = '24px';
       tldrList.style.marginLeft = '0';
+      tldrList.style.maxWidth = '60ch';
+      tldrList.style.display = 'block';
       tldrList.innerHTML = bulletPoints;
       
       tldrSection.innerHTML = '';
@@ -322,6 +509,8 @@
       const contentSection = document.getElementById('content-section');
       if (!contentSection || !cleanText) return;
 
+      const theme = this.themes[this.currentTheme];
+
       const contentHeader = document.createElement('div');
       contentHeader.style.display = 'flex';
       contentHeader.style.alignItems = 'center';
@@ -330,7 +519,7 @@
       
       const contentTitle = document.createElement('h2');
       contentTitle.style.fontSize = '24px';
-      contentTitle.style.color = '#333';
+      contentTitle.style.color = theme.headingColor;
       contentTitle.style.margin = '0';
       contentTitle.innerText = 'Simplified Content';
       
@@ -362,9 +551,11 @@
       contentHeader.appendChild(contentListenBtn);
       
       const contentPara = document.createElement('p');
-      contentPara.style.fontSize = '18px';
-      contentPara.style.lineHeight = '1.8';
-      contentPara.style.color = '#555';
+      contentPara.style.fontSize = this.fontSize + 'px';
+      contentPara.style.lineHeight = '1.6';
+      contentPara.style.color = theme.textColor;
+      contentPara.style.maxWidth = '60ch';
+      contentPara.style.marginBottom = '1rem';
       contentPara.innerText = cleanText;
       
       contentSection.innerHTML = '';
@@ -373,11 +564,12 @@
     },
 
     _showError: function() {
+      const theme = this.themes[this.currentTheme];
       const tldrSection = document.getElementById('tldr-section');
       if (tldrSection) {
         tldrSection.innerHTML = `
-          <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">Error</h2>
-          <p style="font-size: 18px; line-height: 1.8; color: #ff0000;">
+          <h2 style="font-size: 24px; margin-bottom: 16px; color: ${theme.headingColor};">Error</h2>
+          <p style="font-size: 18px; line-height: 1.6; color: #ff0000;">
             Failed to simplify page. Please try again.
           </p>
         `;

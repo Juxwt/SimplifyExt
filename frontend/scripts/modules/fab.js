@@ -14,7 +14,7 @@
 
     _createButton: function() {
       const fab = document.createElement('button');
-      fab.innerText = 'Clarify';
+      fab.innerText = '🔍';
       fab.id = 'simplify-fab';
       fab.style.position = 'fixed';
       fab.style.bottom = '32px';
@@ -26,7 +26,7 @@
       fab.style.borderRadius = '50%';
       fab.style.width = '64px';
       fab.style.height = '64px';
-      fab.style.fontSize = '18px';
+      fab.style.fontSize = '28px';
       fab.style.boxShadow = '0 2px 8px rgba(0,0,0,0.2)';
       fab.style.cursor = 'pointer';
       fab.style.outline = 'none';
