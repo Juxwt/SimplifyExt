@@ -85,8 +85,8 @@
     const panel = document.createElement('div');
     panel.style.backgroundColor = '#ffffff';
     panel.style.width = '100%';
-    panel.style.maxHeight = '80%';
-    panel.style.borderRadius = '16px 16px 0 0';
+    panel.style.maxHeight = '60%';
+    panel.style.borderRadius = '14px 14px 0 0';
     panel.style.boxShadow = '0 -4px 16px rgba(0, 0, 0, 0.2)';
     panel.style.padding = '24px';
     panel.style.overflowY = 'auto';
@@ -114,11 +114,12 @@
     tldr.style.marginBottom = '24px';
     tldr.innerHTML = `
       <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">TL;DR</h2>
-      <ul style="font-size: 18px; line-height: 1.8; color: #555;">
-        <li>Loading summary...</li>
-        <li>Please wait while we simplify this page</li>
-        <li>This will only take a moment</li>
-      </ul>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+          <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #1976d2 0%, #64b5f6 50%, #1976d2 100%); background-size: 200% 100%; animation: loadingBar 1.5s ease-in-out infinite;"></div>
+        </div>
+        <span style="font-size: 14px; color: #666;">Loading...</span>
+      </div>
     `;
 
     // Clean Content Section
@@ -126,10 +127,13 @@
     content.id = 'content-section';
     content.style.marginTop = '24px';
     content.innerHTML = `
-      <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">Simplified Content</h2>
-      <p style="font-size: 18px; line-height: 1.8; color: #555;">
-        Content will appear here after processing...
-      </p>
+      <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">Content Summary</h2>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+          <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #1976d2 0%, #64b5f6 50%, #1976d2 100%); background-size: 200% 100%; animation: loadingBar 1.5s ease-in-out infinite;"></div>
+        </div>
+        <span style="font-size: 14px; color: #666;">Loading...</span>
+      </div>
     `;
 
     // Find Action Button
@@ -164,6 +168,10 @@
       @keyframes slideUp {
         from { transform: translateY(100%); }
         to { transform: translateY(0); }
+      }
+      @keyframes loadingBar {
+        0% { background-position: 200% 0; }
+        100% { background-position: -200% 0; }
       }
     `;
     document.head.appendChild(style);
