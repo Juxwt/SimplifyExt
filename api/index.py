@@ -45,7 +45,9 @@ def process_page(data: PageContent):
         You are an assistive reading assistant.
         
         GOAL 1: Create a "Clean View" version of the text. Remove ads, navigation, and fluff. Keep the core meaning but simplify complex sentences.
-        GOAL 2: Create a "TL;DR" summary with exactly 3 bullet points.
+        GOAL 2: Create a "TL;DR" summary with EXACTLY 3 bullet points. Each point should be concise (1-2 sentences max).
+        
+        IMPORTANT: You MUST return exactly 3 summary points in the summary_points array. No more, no less.
         
         INPUT TEXT:
         {data.text_content[:15000]} 
@@ -62,10 +64,13 @@ def process_page(data: PageContent):
                     "properties": {
                         "summary_points": {
                             "type": "array",
-                            "items": {"type": "string"}
+                            "items": {"type": "string"},
+                            "minItems": 3,
+                            "maxItems": 3
                         },
                         "clean_text": {"type": "string"}
-                    }
+                    },
+                    "required": ["summary_points", "clean_text"]
                 }
             )
         )

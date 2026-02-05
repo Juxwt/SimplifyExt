@@ -757,8 +757,14 @@
 
       // Update TL;DR
       const tldrSection = document.getElementById('tldr-section');
-      if (tldrSection && result.summary_points) {
-        const bulletPoints = result.summary_points.map(point => `<li>${point}</li>`).join('');
+      if (tldrSection && result.summary_points && Array.isArray(result.summary_points)) {
+        // Ensure we have at least some points, pad to 3 if needed
+        const points = result.summary_points.slice(0, 3); // Take max 3 points
+        while (points.length < 3) {
+          points.push('Additional information not available.');
+        }
+        
+        const bulletPoints = points.map(point => `<li style="margin-bottom: 8px;">${point}</li>`).join('');
         
         // Recreate the header with Listen button (now that content is loaded)
         const tldrHeader = document.createElement('div');
@@ -805,6 +811,10 @@
         tldrList.style.fontSize = '18px';
         tldrList.style.lineHeight = '1.8';
         tldrList.style.color = '#555';
+        tldrList.style.listStyleType = 'disc';
+        tldrList.style.paddingLeft = '24px';
+        tldrList.style.marginLeft = '0';
+        tldrList.style.display = 'block';
         tldrList.innerHTML = bulletPoints;
         
         tldrSection.innerHTML = '';
