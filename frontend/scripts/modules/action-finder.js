@@ -1,6 +1,7 @@
 // Action Finder Module - Scans DOM for interactive elements locally
 (function() {
   window.SimplifyActionFinder = {
+    API_BASE_URL: 'https://simplify-ext.vercel.app',
     
     /**
      * Scans the page for all interactive elements
@@ -100,27 +101,53 @@
      * @param {DOMElement} element - The element to highlight
      */
     highlight: function(element) {
+      // Validate element exists and is in DOM
+      if (!element || !element.isConnected) {
+        console.error('Cannot highlight: element is null or not in DOM');
+        return;
+      }
+
       // Remove any existing highlights first
       this.removeHighlight();
       
       // Store reference for later removal
       this._highlightedElement = element;
       
-      // Scroll element into view
-      element.scrollIntoView({ 
-        behavior: 'smooth', 
-        block: 'center',
-        inline: 'center'
-      });
+      // Store original styles to restore later
+      this._originalStyles = {
+        outline: element.style.outline,
+        outlineOffset: element.style.outlineOffset,
+        boxShadow: element.style.boxShadow,
+        animation: element.style.animation,
+        transition: element.style.transition,
+        position: element.style.position,
+        zIndex: element.style.zIndex
+      };
       
-      // Apply highlight style
-      element.style.outline = '4px solid #ff6b00';
-      element.style.outlineOffset = '4px';
-      element.style.transition = 'outline 0.3s ease';
-      element.style.boxShadow = '0 0 20px rgba(255, 107, 0, 0.6)';
+      // Scroll element into view with error handling
+      try {
+        element.scrollIntoView({ 
+          behavior: 'smooth', 
+          block: 'center',
+          inline: 'center'
+        });
+      } catch (e) {
+        console.warn('ScrollIntoView failed:', e);
+      }
       
-      // Add pulsating animation
-      element.style.animation = 'simplify-pulse 1.5s ease-in-out infinite';
+      // Apply highlight styles with !important to override page CSS
+      element.style.setProperty('outline', '4px solid #ff6b00', 'important');
+      element.style.setProperty('outline-offset', '4px', 'important');
+      element.style.setProperty('box-shadow', '0 0 20px rgba(255, 107, 0, 0.6)', 'important');
+      element.style.setProperty('transition', 'outline 0.3s ease', 'important');
+      element.style.setProperty('animation', 'simplify-pulse 1.5s ease-in-out infinite', 'important');
+      
+      // Ensure element is visible above other content
+      const computedZIndex = window.getComputedStyle(element).zIndex;
+      if (computedZIndex === 'auto' || parseInt(computedZIndex) < 999998) {
+        element.style.setProperty('position', 'relative', 'important');
+        element.style.setProperty('z-index', '999998', 'important');
+      }
       
       // Add the pulsating animation if not already added
       if (!document.getElementById('simplify-highlight-animation')) {
@@ -129,12 +156,12 @@
         style.textContent = `
           @keyframes simplify-pulse {
             0%, 100% { 
-              outline-color: #ff6b00;
-              box-shadow: 0 0 20px rgba(255, 107, 0, 0.6);
+              outline-color: #ff6b00 !important;
+              box-shadow: 0 0 20px rgba(255, 107, 0, 0.6) !important;
             }
             50% { 
-              outline-color: #ff9f4d;
-              box-shadow: 0 0 30px rgba(255, 107, 0, 0.9);
+              outline-color: #ff9f4d !important;
+              box-shadow: 0 0 30px rgba(255, 107, 0, 0.9) !important;
             }
           }
         `;
@@ -146,15 +173,80 @@
      * Removes highlight from the currently highlighted element
      */
     removeHighlight: function() {
-      if (this._highlightedElement) {
-        this._highlightedElement.style.outline = '';
-        this._highlightedElement.style.outlineOffset = '';
-        this._highlightedElement.style.boxShadow = '';
-        this._highlightedElement.style.animation = '';
-        this._highlightedElement = null;
+      if (this._highlightedElement && this._highlightedElement.isConnected) {
+        // Restore original styles
+        if (this._originalStyles) {
+          this._highlightedElement.style.outline = this._originalStyles.outline;
+          this._highlightedElement.style.outlineOffset = this._originalStyles.outlineOffset;
+          this._highlightedElement.style.boxShadow = this._originalStyles.boxShadow;
+          this._highlightedElement.style.animation = this._originalStyles.animation;
+          this._highlightedElement.style.transition = this._originalStyles.transition;
+          this._highlightedElement.style.position = this._originalStyles.position;
+          this._highlightedElement.style.zIndex = this._originalStyles.zIndex;
+          this._originalStyles = null;
+        } else {
+          // Fallback: just remove the properties
+          this._highlightedElement.style.removeProperty('outline');
+          this._highlightedElement.style.removeProperty('outline-offset');
+          this._highlightedElement.style.removeProperty('box-shadow');
+          this._highlightedElement.style.removeProperty('animation');
+          this._highlightedElement.style.removeProperty('transition');
+          this._highlightedElement.style.removeProperty('position');
+          this._highlightedElement.style.removeProperty('z-index');
+        }
+      }
+      
+      this._highlightedElement = null;
+    },
+
+    /**
+     * Filters actions using AI to remove noise (ads, tracking, footer links)
+     * @param {Array} actions - Array of {element: DOMNode, label: string} objects
+     * @returns {Promise<Array>} Filtered array of actions
+     */
+    filterWithAI: async function(actions) {
+      // Handle empty or small lists
+      if (actions.length === 0) return [];
+      if (actions.length <= 5) return actions; // Too small to benefit from filtering
+      
+      try {
+        // Limit to first 100 items to avoid token limits
+        const itemsToFilter = actions.slice(0, 100);
+        
+        // Extract just the labels
+        const labels = itemsToFilter.map(a => a.label);
+        
+        // Send to API
+        const response = await fetch(`${this.API_BASE_URL}/api/filter-actions`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ labels: labels })
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to filter actions');
+        }
+
+        const result = await response.json();
+        
+        // Extract filtered actions using the valid indices
+        const filteredActions = result.valid_indices.map(idx => itemsToFilter[idx]);
+        
+        console.log(`Filtered ${actions.length} actions down to ${filteredActions.length} useful actions`);
+        return filteredActions;
+
+      } catch (error) {
+        console.error('Error filtering actions:', error);
+        // Fallback: return original list if API fails (better to show noisy list than nothing)
+        console.warn('Falling back to unfiltered action list');
+        return actions;
       }
     },
 
-    _highlightedElement: null
+    // Private properties
+    _highlightedElement: null,
+    _originalStyles: null
   };
 })();

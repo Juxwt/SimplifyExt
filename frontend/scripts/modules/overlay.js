@@ -386,17 +386,10 @@
 
     /**
      * Shows Layer 2: Full-screen scrollable list of all page actions
+     * Includes AI filtering to remove noise (ads, tracking, footer links)
      */
-    showActionsLayer: function() {
-      // Scan page for actions
-      const actions = window.SimplifyActionFinder.scan();
-      
-      if (actions.length === 0) {
-        alert('No interactive elements found on this page.');
-        return;
-      }
-
-      // Create actions layer overlay
+    showActionsLayer: async function() {
+      // Create actions layer overlay immediately with loading state
       const actionsLayer = document.createElement('div');
       actionsLayer.id = 'simplify-actions-layer';
       actionsLayer.style.position = 'fixed';
@@ -441,15 +434,53 @@
       title.style.color = '#333';
       title.style.margin = '0';
 
+      const loadingIndicator = document.createElement('div');
+      loadingIndicator.style.display = 'flex';
+      loadingIndicator.style.alignItems = 'center';
+      loadingIndicator.style.gap = '8px';
+      loadingIndicator.style.fontSize = '16px';
+      loadingIndicator.style.color = '#666';
+      
+      const spinner = document.createElement('span');
+      spinner.innerHTML = '⏳';
+      spinner.style.animation = 'spin 1s linear infinite';
+      
+      const loadingText = document.createElement('span');
+      loadingText.innerText = 'Curating actions...';
+      
+      loadingIndicator.appendChild(spinner);
+      loadingIndicator.appendChild(loadingText);
+
+      header.appendChild(backBtn);
+      header.appendChild(title);
+      header.appendChild(loadingIndicator);
+      actionsLayer.appendChild(header);
+
+      // Add to page immediately to show loading state
+      document.body.appendChild(actionsLayer);
+
+      // Scan page for actions
+      const rawActions = window.SimplifyActionFinder.scan();
+      
+      if (rawActions.length === 0) {
+        // Replace loading with error message
+        loadingIndicator.innerHTML = '<span style="color: #ff0000;">No interactive elements found on this page.</span>';
+        setTimeout(() => {
+          document.body.removeChild(actionsLayer);
+        }, 2000);
+        return;
+      }
+
+      // Filter with AI
+      const actions = await window.SimplifyActionFinder.filterWithAI(rawActions);
+
+      // Update header with count
+      loadingIndicator.remove();
       const count = document.createElement('span');
       count.innerText = `(${actions.length})`;
       count.style.fontSize = '20px';
       count.style.color = '#666';
-
-      header.appendChild(backBtn);
-      header.appendChild(title);
       header.appendChild(count);
-      actionsLayer.appendChild(header);
 
       // Actions list
       const actionsList = document.createElement('div');
@@ -509,7 +540,6 @@
       }
 
       actionsLayer.appendChild(actionsList);
-      document.body.appendChild(actionsLayer);
     },
 
     /**
