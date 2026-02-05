@@ -179,7 +179,7 @@
 
     _createActionButton: function() {
       const actionBtn = document.createElement('button');
-      actionBtn.innerText = 'Find Main Action';
+      actionBtn.innerText = 'View All Page Actions';
       actionBtn.style.marginTop = '24px';
       actionBtn.style.background = '#1976d2';
       actionBtn.style.color = '#fff';
@@ -189,7 +189,7 @@
       actionBtn.style.fontSize = '16px';
       actionBtn.style.cursor = 'pointer';
       actionBtn.addEventListener('click', () => {
-        window.SimplifyActionFinder.find();
+        this.showActionsLayer();
       });
       return actionBtn;
     },
@@ -382,6 +382,241 @@
           </p>
         `;
       }
+    },
+
+    /**
+     * Shows Layer 2: Full-screen scrollable list of all page actions
+     */
+    showActionsLayer: function() {
+      // Scan page for actions
+      const actions = window.SimplifyActionFinder.scan();
+      
+      if (actions.length === 0) {
+        alert('No interactive elements found on this page.');
+        return;
+      }
+
+      // Create actions layer overlay
+      const actionsLayer = document.createElement('div');
+      actionsLayer.id = 'simplify-actions-layer';
+      actionsLayer.style.position = 'fixed';
+      actionsLayer.style.top = '0';
+      actionsLayer.style.left = '0';
+      actionsLayer.style.width = '100%';
+      actionsLayer.style.height = '100%';
+      actionsLayer.style.backgroundColor = '#ffffff';
+      actionsLayer.style.zIndex = '1000010';
+      actionsLayer.style.overflowY = 'auto';
+      actionsLayer.style.padding = '24px';
+      actionsLayer.style.animation = 'slideUp 0.3s ease-out';
+
+      // Header with back button
+      const header = document.createElement('div');
+      header.style.display = 'flex';
+      header.style.alignItems = 'center';
+      header.style.gap = '16px';
+      header.style.marginBottom = '24px';
+      header.style.position = 'sticky';
+      header.style.top = '0';
+      header.style.backgroundColor = '#ffffff';
+      header.style.paddingBottom = '12px';
+      header.style.borderBottom = '1px solid #e0e0e0';
+      header.style.zIndex = '10';
+
+      const backBtn = document.createElement('button');
+      backBtn.innerText = '← Back';
+      backBtn.style.background = 'transparent';
+      backBtn.style.border = 'none';
+      backBtn.style.fontSize = '18px';
+      backBtn.style.cursor = 'pointer';
+      backBtn.style.color = '#1976d2';
+      backBtn.style.padding = '8px';
+      backBtn.addEventListener('click', () => {
+        document.body.removeChild(actionsLayer);
+      });
+
+      const title = document.createElement('h1');
+      title.innerText = 'Page Actions';
+      title.style.fontSize = '28px';
+      title.style.color = '#333';
+      title.style.margin = '0';
+
+      const count = document.createElement('span');
+      count.innerText = `(${actions.length})`;
+      count.style.fontSize = '20px';
+      count.style.color = '#666';
+
+      header.appendChild(backBtn);
+      header.appendChild(title);
+      header.appendChild(count);
+      actionsLayer.appendChild(header);
+
+      // Actions list
+      const actionsList = document.createElement('div');
+      actionsList.style.display = 'flex';
+      actionsList.style.flexDirection = 'column';
+      actionsList.style.gap = '12px';
+
+      for (const action of actions) {
+        const actionItem = document.createElement('div');
+        actionItem.style.padding = '16px';
+        actionItem.style.backgroundColor = '#f5f5f5';
+        actionItem.style.borderRadius = '8px';
+        actionItem.style.cursor = 'pointer';
+        actionItem.style.transition = 'background 0.2s, transform 0.1s';
+        actionItem.style.display = 'flex';
+        actionItem.style.alignItems = 'center';
+        actionItem.style.gap = '12px';
+
+        // Element type badge
+        const badge = document.createElement('span');
+        badge.innerText = action.element.tagName.toLowerCase();
+        badge.style.padding = '4px 8px';
+        badge.style.backgroundColor = '#1976d2';
+        badge.style.color = '#fff';
+        badge.style.borderRadius = '4px';
+        badge.style.fontSize = '12px';
+        badge.style.fontWeight = 'bold';
+        badge.style.textTransform = 'uppercase';
+        badge.style.flexShrink = '0';
+
+        // Label text
+        const label = document.createElement('span');
+        label.innerText = action.label;
+        label.style.fontSize = '16px';
+        label.style.color = '#333';
+        label.style.flex = '1';
+
+        actionItem.appendChild(badge);
+        actionItem.appendChild(label);
+
+        // Hover effect
+        actionItem.addEventListener('mouseenter', () => {
+          actionItem.style.backgroundColor = '#e3f2fd';
+          actionItem.style.transform = 'translateX(4px)';
+        });
+        actionItem.addEventListener('mouseleave', () => {
+          actionItem.style.backgroundColor = '#f5f5f5';
+          actionItem.style.transform = 'translateX(0)';
+        });
+
+        // Click to show Layer 3
+        actionItem.addEventListener('click', () => {
+          this.showHighlightLayer(action.element, actionsLayer);
+        });
+
+        actionsList.appendChild(actionItem);
+      }
+
+      actionsLayer.appendChild(actionsList);
+      document.body.appendChild(actionsLayer);
+    },
+
+    /**
+     * Shows Layer 3: Highlights specific element with floating control bar
+     * @param {DOMElement} targetElement - The element to highlight
+     * @param {DOMElement} actionsLayer - Reference to Layer 2 to hide/show
+     */
+    showHighlightLayer: function(targetElement, actionsLayer) {
+      // Hide Layer 2
+      actionsLayer.style.display = 'none';
+
+      // Hide Layer 1 (base overlay)
+      const baseOverlay = document.getElementById('simplify-overlay');
+      if (baseOverlay) {
+        baseOverlay.style.display = 'none';
+      }
+
+      // Highlight the element
+      window.SimplifyActionFinder.highlight(targetElement);
+
+      // Create floating control bar
+      const controlBar = document.createElement('div');
+      controlBar.id = 'simplify-highlight-control';
+      controlBar.style.position = 'fixed';
+      controlBar.style.top = '20px';
+      controlBar.style.left = '50%';
+      controlBar.style.transform = 'translateX(-50%)';
+      controlBar.style.backgroundColor = '#ffffff';
+      controlBar.style.padding = '12px 24px';
+      controlBar.style.borderRadius = '30px';
+      controlBar.style.boxShadow = '0 4px 20px rgba(0, 0, 0, 0.3)';
+      controlBar.style.zIndex = '1000020';
+      controlBar.style.display = 'flex';
+      controlBar.style.alignItems = 'center';
+      controlBar.style.gap = '16px';
+      controlBar.style.animation = 'fadeIn 0.3s ease-in-out';
+
+      const backBtn = document.createElement('button');
+      backBtn.innerText = '← Back to List';
+      backBtn.style.background = '#1976d2';
+      backBtn.style.color = '#fff';
+      backBtn.style.border = 'none';
+      backBtn.style.borderRadius = '20px';
+      backBtn.style.padding = '10px 20px';
+      backBtn.style.fontSize = '16px';
+      backBtn.style.cursor = 'pointer';
+      backBtn.style.transition = 'background 0.2s';
+      backBtn.addEventListener('mouseenter', () => {
+        backBtn.style.background = '#1565c0';
+      });
+      backBtn.addEventListener('mouseleave', () => {
+        backBtn.style.background = '#1976d2';
+      });
+      backBtn.addEventListener('click', () => {
+        // Remove highlight
+        window.SimplifyActionFinder.removeHighlight();
+        
+        // Remove control bar
+        document.body.removeChild(controlBar);
+        
+        // Restore Layer 2
+        actionsLayer.style.display = 'block';
+        
+        // Restore Layer 1
+        if (baseOverlay) {
+          baseOverlay.style.display = 'flex';
+        }
+      });
+
+      const closeBtn = document.createElement('button');
+      closeBtn.innerText = '✕ Close All';
+      closeBtn.style.background = 'transparent';
+      closeBtn.style.color = '#666';
+      closeBtn.style.border = '1px solid #ccc';
+      closeBtn.style.borderRadius = '20px';
+      closeBtn.style.padding = '10px 20px';
+      closeBtn.style.fontSize = '16px';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.transition = 'all 0.2s';
+      closeBtn.addEventListener('mouseenter', () => {
+        closeBtn.style.borderColor = '#999';
+        closeBtn.style.color = '#333';
+      });
+      closeBtn.addEventListener('mouseleave', () => {
+        closeBtn.style.borderColor = '#ccc';
+        closeBtn.style.color = '#666';
+      });
+      closeBtn.addEventListener('click', () => {
+        // Remove highlight
+        window.SimplifyActionFinder.removeHighlight();
+        
+        // Remove control bar
+        document.body.removeChild(controlBar);
+        
+        // Remove Layer 2
+        document.body.removeChild(actionsLayer);
+        
+        // Remove Layer 1
+        if (baseOverlay) {
+          window.SimplifyAudioPlayer.stopSpeech();
+          document.body.removeChild(baseOverlay);
+        }
+      });
+
+      controlBar.appendChild(backBtn);
+      controlBar.appendChild(closeBtn);
+      document.body.appendChild(controlBar);
     }
   };
 })();

@@ -23,11 +23,6 @@ class PageContent(BaseModel):
     url: str
     text_content: str
 
-class ActionFinderInput(BaseModel):
-    url: str
-    text_content: str
-    clickable_elements: list[str] | None = None  # Optional: list of button/link texts
-
 # --- Responsibility: Secure API Key Management ---
 # Initialize Gemini using the environment variable, keeping keys off the client
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
@@ -80,52 +75,3 @@ def process_page(data: PageContent):
     except Exception as e:
         # Reliability: Return a clear error so the frontend handles it gracefully
         raise HTTPException(status_code=500, detail=f"Error processing page: {str(e)}")
-
-@app.post("/api/find-action")
-def find_action(data: ActionFinderInput):
-    """
-    Feature 3: Goal Action Finder
-    Analyzes the page content to identify the most important action button.
-    """
-    try:
-        # Build context about available actions if provided
-        clickable_info = ""
-        if data.clickable_elements:
-            clickable_info = f"\n\nAVAILABLE CLICKABLE ELEMENTS: {', '.join(data.clickable_elements[:20])}"
-        
-        # --- Responsibility: Prompt Strategy (Action Finding) ---
-        prompt = f"""
-        You are an assistive browsing assistant helping users identify the primary action on a webpage.
-        
-        GOAL: Identify the SINGLE most important button or action the user should take on this page.
-        Consider the page's main purpose (e.g., shopping → "Add to Cart", login page → "Sign In", form → "Submit").
-        
-        PAGE URL: {data.url}
-        PAGE CONTENT:
-        {data.text_content[:10000]}{clickable_info}
-        
-        Identify the most relevant action and explain why it's the primary goal.
-        """
-
-        # Call Gemini with structured output
-        response = client.models.generate_content(
-            model="gemini-2.5-flash",
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                response_schema={
-                    "type": "object",
-                    "properties": {
-                        "recommended_action": {"type": "string"},
-                        "reasoning": {"type": "string"}
-                    },
-                    "required": ["recommended_action", "reasoning"]
-                }
-            )
-        )
-
-        return response.parsed
-
-    except Exception as e:
-        # Reliability: Return a clear error so the frontend handles it gracefully
-        raise HTTPException(status_code=500, detail=f"Error finding action: {str(e)}")
