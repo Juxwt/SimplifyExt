@@ -637,11 +637,12 @@
     
     const tldrContent = document.createElement('div');
     tldrContent.innerHTML = `
-      <ul style="font-size: 18px; line-height: 1.8; color: #555;">
-        <li>Loading summary...</li>
-        <li>Please wait while we simplify this page</li>
-        <li>This will only take a moment</li>
-      </ul>
+      <div style="display: flex; align-items: center; gap: 12px;">
+        <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+          <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #1976d2 0%, #64b5f6 50%, #1976d2 100%); background-size: 200% 100%; animation: loadingBar 1.5s ease-in-out infinite;"></div>
+        </div>
+        <span style="font-size: 14px; color: #666;">Loading...</span>
+      </div>
     `;
     tldr.appendChild(tldrContent);
 
@@ -661,7 +662,7 @@
     contentTitle.style.fontSize = '24px';
     contentTitle.style.color = '#333';
     contentTitle.style.margin = '0';
-    contentTitle.innerText = 'Simplified Content';
+    contentTitle.innerText = 'Content Summary';
     
     // Loading spinner for Simplified Content
     const contentSpinner = document.createElement('div');
@@ -675,7 +676,14 @@
     content.appendChild(contentHeader);
     
     const contentBody = document.createElement('div');
-    contentBody.innerHTML = '<p style="font-size: 18px; line-height: 1.8; color: #555;">Content will appear here after processing...</p>';
+    contentBody.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
+            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #1976d2 0%, #64b5f6 50%, #1976d2 100%); background-size: 200% 100%; animation: loadingBar 1.5s ease-in-out infinite;"></div>
+          </div>
+          <span style="font-size: 14px; color: #666;">Loading...</span>
+        </div>
+      `;
     content.appendChild(contentBody);
 
     // Find Action Button
