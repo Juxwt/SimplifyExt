@@ -16,6 +16,7 @@
         "scripts/modules/fab.js",
         "scripts/modules/overlay.js",
         "scripts/modules/action-finder.js",
+        "scripts/modules/actions-layer.js",
         "scripts/content.js"
       ]
     }
