@@ -23,6 +23,9 @@ class PageContent(BaseModel):
     url: str
     text_content: str
 
+class FilterInput(BaseModel):
+    labels: list[str]
+
 # --- Responsibility: Secure API Key Management ---
 # Initialize Gemini using the environment variable, keeping keys off the client
 client = genai.Client(api_key=os.environ.get("GEMINI_API_KEY"))
@@ -75,3 +78,46 @@ def process_page(data: PageContent):
     except Exception as e:
         # Reliability: Return a clear error so the frontend handles it gracefully
         raise HTTPException(status_code=500, detail=f"Error processing page: {str(e)}")
+
+@app.post("/api/filter-actions")
+def filter_actions(data: FilterInput):
+    try:
+        # --- Responsibility: AI-Powered Action Curation ---
+        # Using Gemini to filter out noise (ads, tracking, footer links) from action list
+        prompt = f"""
+        You are a UI/UX expert. I will provide a list of button labels from a webpage.
+        Your goal is to identify the 'Useful' actions and filter out 'Noise'.
+        
+        USEFUL: Navigation (Home, About, Dashboard), Functional (Login, Sign Up, Submit, Pay, Search, Download), Content Interaction (Play, Pause, Watch, Read More, Add to Cart, Buy Now), User Actions (Edit, Delete, Save, Cancel, Share, Like).
+        
+        NOISE: Ads (AdChoices, Sponsor, Advertisement, Promoted), Social Share spam (Tweet this, Share on Facebook, Pin it), Footer clutter (Privacy Policy, Terms of Service, Cookie Settings, Legal, Copyright), Tracking/Analytics buttons, Empty/Nonsense text, Duplicate generic links.
+        
+        Return a JSON object with a single key 'valid_indices' containing an integer array of the positions (0-indexed) of useful items in the original list.
+        
+        BUTTON LABELS:
+        {data.labels}
+        """
+
+        # Call Gemini for intelligent filtering
+        response = client.models.generate_content(
+            model="gemini-2.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema={
+                    "type": "object",
+                    "properties": {
+                        "valid_indices": {
+                            "type": "array",
+                            "items": {"type": "integer"}
+                        }
+                    },
+                    "required": ["valid_indices"]
+                }
+            )
+        )
+
+        return response.parsed
+
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error filtering actions: {str(e)}")
