@@ -44,8 +44,25 @@
     });
   }
 
+  // Extract page content
+  function extractPageContent() {
+    // Get main text content from the page
+    const bodyText = document.body.innerText || document.body.textContent;
+    
+    // Get page title
+    const title = document.title;
+    
+    // Get page URL
+    const url = window.location.href;
+    
+    return {
+      url: url,
+      text_content: bodyText.substring(0, 10000) // Limit to first 10k characters
+    };
+  }
+
   // Create and show overlay
-  function showOverlay() {
+  async function showOverlay() {
     // Check if overlay already exists
     if (document.getElementById('simplify-overlay')) return;
 
@@ -74,6 +91,7 @@
     panel.style.padding = '24px';
     panel.style.overflowY = 'auto';
     panel.style.animation = 'slideUp 0.3s ease-out';
+    panel.style.position = 'relative';
 
     // Close button
     const closeBtn = document.createElement('button');
@@ -92,6 +110,7 @@
 
     // TL;DR Section
     const tldr = document.createElement('div');
+    tldr.id = 'tldr-section';
     tldr.style.marginBottom = '24px';
     tldr.innerHTML = `
       <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">TL;DR</h2>
@@ -104,6 +123,7 @@
 
     // Clean Content Section
     const content = document.createElement('div');
+    content.id = 'content-section';
     content.style.marginTop = '24px';
     content.innerHTML = `
       <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">Simplified Content</h2>
@@ -124,7 +144,7 @@
     actionBtn.style.fontSize = '16px';
     actionBtn.style.cursor = 'pointer';
     actionBtn.addEventListener('click', () => {
-      alert('Find Action feature coming soon!');
+      findMainAction();
     });
 
     // Assemble panel
@@ -157,5 +177,113 @@
         document.body.removeChild(overlay);
       }
     });
+
+    // Extract and process page content
+    const pageData = extractPageContent();
+    
+    try {
+      const response = await fetch('https://simplify-ext.vercel.app/api/process-page', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pageData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to process page');
+      }
+
+      const result = await response.json();
+
+      // Update TL;DR
+      const tldrSection = document.getElementById('tldr-section');
+      if (tldrSection && result.summary_points) {
+        const bulletPoints = result.summary_points.map(point => `<li>${point}</li>`).join('');
+        tldrSection.innerHTML = `
+          <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">TL;DR</h2>
+          <ul style="font-size: 18px; line-height: 1.8; color: #555;">
+            ${bulletPoints}
+          </ul>
+        `;
+      }
+
+      // Update Clean Content
+      const contentSection = document.getElementById('content-section');
+      if (contentSection && result.clean_text) {
+        contentSection.innerHTML = `
+          <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">Simplified Content</h2>
+          <p style="font-size: 18px; line-height: 1.8; color: #555;">
+            ${result.clean_text}
+          </p>
+        `;
+      }
+
+    } catch (error) {
+      console.error('Error processing page:', error);
+      const tldrSection = document.getElementById('tldr-section');
+      if (tldrSection) {
+        tldrSection.innerHTML = `
+          <h2 style="font-size: 24px; margin-bottom: 16px; color: #333;">Error</h2>
+          <p style="font-size: 18px; line-height: 1.8; color: #ff0000;">
+            Failed to simplify page. Please try again.
+          </p>
+        `;
+      }
+    }
+  }
+
+  // Find and highlight main action
+  async function findMainAction() {
+    const pageData = extractPageContent();
+    
+    try {
+      const response = await fetch('https://simplify-ext.vercel.app/api/find-action', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(pageData)
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to find action');
+      }
+
+      const result = await response.json();
+
+      if (result.recommended_action) {
+        // Search for button/link with this text
+        const elements = Array.from(document.querySelectorAll('button, a, input[type="submit"], input[type="button"]'));
+        
+        for (const element of elements) {
+          const text = element.innerText || element.value || '';
+          if (text.toLowerCase().includes(result.recommended_action.toLowerCase())) {
+            // Highlight the element
+            element.style.outline = '4px solid #ff6b00';
+            element.style.outlineOffset = '4px';
+            element.style.transition = 'outline 0.3s ease';
+            
+            // Scroll to element
+            element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            
+            // Remove highlight after 5 seconds
+            setTimeout(() => {
+              element.style.outline = '';
+            }, 5000);
+            
+            break;
+          }
+        }
+        
+        alert(`Found action: "${result.recommended_action}"`);
+      } else {
+        alert('No clear action found on this page.');
+      }
+
+    } catch (error) {
+      console.error('Error finding action:', error);
+      alert('Failed to find main action. Please try again.');
+    }
   }
 })();
