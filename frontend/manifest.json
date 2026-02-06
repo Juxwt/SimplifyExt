@@ -12,6 +12,12 @@
     {
       "matches": ["<all_urls>"],
       "js": [
+        "scripts/modules/config.js",
+        "scripts/modules/mock-data.js",
+        "scripts/modules/theme-control.js",
+        "scripts/modules/tldr-section.js",
+        "scripts/modules/content-section.js",
+        "scripts/modules/overlay-panel.js",
         "scripts/modules/audio-player.js",
         "scripts/modules/fab.js",
         "scripts/modules/overlay.js",
