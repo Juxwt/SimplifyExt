@@ -137,6 +137,18 @@
 
     _showError: function() {
       const theme = window.SimplifyConfig.themes[window.SimplifyThemeControl.currentTheme];
+      
+      // Clear loading intervals in both sections
+      if (window.SimplifyTLDRSection._loadingInterval) {
+        clearInterval(window.SimplifyTLDRSection._loadingInterval);
+        window.SimplifyTLDRSection._loadingInterval = null;
+      }
+      if (window.SimplifyContentSection._loadingInterval) {
+        clearInterval(window.SimplifyContentSection._loadingInterval);
+        window.SimplifyContentSection._loadingInterval = null;
+      }
+      
+      // Show error in TLDR section
       const tldrSection = document.getElementById('tldr-section');
       if (tldrSection) {
         tldrSection.innerHTML = `
@@ -146,7 +158,7 @@
               Failed to simplify page. Please try again.
             </p>
             <button id="simplify-retry-btn" style="
-              background: #1976d2;
+              background: #dc3545;
               color: #fff;
               border: none;
               border-radius: 4px;
@@ -171,12 +183,20 @@
             retryBtn.style.background = '#999';
             retryBtn.style.cursor = 'not-allowed';
             
-            // Clear the error and show loading
-            tldrSection.innerHTML = `
-              <div style="text-align: center; padding: 20px;">
-                <p style="font-size: 18px; color: ${theme.textColor};">Loading summary...</p>
-              </div>
-            `;
+            // Recreate loading states for both sections
+            const tldr = window.SimplifyTLDRSection.create();
+            const content = window.SimplifyContentSection.create();
+            
+            // Replace the sections
+            const oldTldr = document.getElementById('tldr-section');
+            if (oldTldr && oldTldr.parentNode) {
+              oldTldr.parentNode.replaceChild(tldr, oldTldr);
+            }
+            
+            const oldContent = document.getElementById('content-section');
+            if (oldContent && oldContent.parentNode) {
+              oldContent.parentNode.replaceChild(content, oldContent);
+            }
             
             // Retry fetching content
             await this._fetchAndDisplayContent();
@@ -185,15 +205,28 @@
           // Add hover effect
           retryBtn.addEventListener('mouseenter', () => {
             if (!retryBtn.disabled) {
-              retryBtn.style.background = '#1565c0';
+              retryBtn.style.background = '#c82333';
             }
           });
           retryBtn.addEventListener('mouseleave', () => {
             if (!retryBtn.disabled) {
-              retryBtn.style.background = '#1976d2';
+              retryBtn.style.background = '#dc3545';
             }
           });
         }
+      }
+      
+      // Clear content section loading state and show error message
+      const contentSection = document.getElementById('content-section');
+      if (contentSection) {
+        contentSection.innerHTML = `
+          <div>
+            <h2 style="font-size: 24px; margin-bottom: 16px; color: ${theme.headingColor}; font-weight: bold;">Content Summary</h2>
+            <p style="font-size: 18px; line-height: 1.6; color: #ff0000;">
+              Failed to load content.
+            </p>
+          </div>
+        `;
       }
     }
   };
