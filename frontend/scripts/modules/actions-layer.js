@@ -1,6 +1,12 @@
 // Actions Layer Module - Handles the full-screen actions list UI
 (function() {
   window.SimplifyActionsLayer = {
+    // Cache for storing actions data per URL
+    cache: {
+      url: null,
+      actions: null
+    },
+
     /**
      * Shows full-screen scrollable list of all page actions
      */
@@ -21,7 +27,10 @@
       actionsLayer.style.overflowY = 'auto';
       actionsLayer.style.padding = '24px';
       actionsLayer.style.animation = 'slideUp 0.3s ease-out';
-      actionsLayer.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+      
+      // Set initial font family
+      const fontFamilyObj = window.SimplifyConfig.fontFamilies.find(f => f.name === window.SimplifyThemeControl.fontFamily);
+      actionsLayer.style.fontFamily = fontFamilyObj ? fontFamilyObj.value : 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
 
       // Header with back button
       const header = this._createHeader(actionsLayer, theme);
@@ -38,6 +47,31 @@
 
       // Add to page immediately to show loading state
       document.body.appendChild(actionsLayer);
+      
+      // Apply initial font family
+      this._applyFontFamily(actionsLayer);
+
+      // Get current URL for caching
+      const currentUrl = window.location.href;
+      
+      // Check if we have cached actions for this URL
+      if (this.cache.url === currentUrl && this.cache.actions && this.cache.actions.length > 0) {
+        // Use cached actions
+        console.log(`Using cached actions (${this.cache.actions.length} items)`);
+        
+        // Update header with count
+        loadingIndicator.remove();
+        const count = document.createElement('span');
+        count.innerText = `(${this.cache.actions.length})`;
+        count.style.fontSize = '20px';
+        count.style.color = theme.textColor;
+        header.appendChild(count);
+
+        // Create actions list from cache
+        const actionsList = this._createActionsList(this.cache.actions, actionsLayer, theme);
+        actionsLayer.appendChild(actionsList);
+        return;
+      }
 
       // Scan page for actions
       const rawActions = window.SimplifyActionFinder.scan();
@@ -52,6 +86,22 @@
 
       // Filter with AI
       const actions = await window.SimplifyActionFinder.filterWithAI(rawActions);
+
+      // Check if filtering returned valid results
+      if (!actions || actions.length === 0) {
+        loadingIndicator.innerHTML = '<span style="color: #ff0000;">No useful actions found after filtering.</span>';
+        setTimeout(() => {
+          document.body.removeChild(actionsLayer);
+        }, 2000);
+        return;
+      }
+
+      // Only cache if we got valid actions
+      if (actions && actions.length > 0) {
+        this.cache.url = currentUrl;
+        this.cache.actions = actions;
+        console.log(`Cached ${actions.length} actions for this URL`);
+      }
 
       // Update header with count
       loadingIndicator.remove();
@@ -171,6 +221,10 @@
       const fontSizeControl = this._createFontSizeControl(actionsLayer, theme);
       themeContainer.appendChild(fontSizeControl);
       
+      // Add font family controls
+      const fontFamilyControl = this._createFontFamilyControl(actionsLayer, theme);
+      themeContainer.appendChild(fontFamilyControl);
+      
       return themeContainer;
     },
 
@@ -226,6 +280,48 @@
       container.appendChild(label);
       container.appendChild(decreaseBtn);
       container.appendChild(increaseBtn);
+      
+      return container;
+    },
+
+    _createFontFamilyControl: function(actionsLayer, theme) {
+      const container = document.createElement('div');
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.gap = '8px';
+      
+      const label = document.createElement('span');
+      label.innerText = 'Font:';
+      label.style.fontSize = '14px';
+      label.style.color = theme.textColor;
+      
+      const select = document.createElement('select');
+      select.style.padding = '6px 12px';
+      select.style.fontSize = '13px';
+      select.style.border = '1px solid #ccc';
+      select.style.borderRadius = '6px';
+      select.style.cursor = 'pointer';
+      select.style.backgroundColor = 'transparent';
+      select.style.color = theme.textColor;
+      select.style.transition = 'all 0.2s';
+      
+      const fontFamilies = window.SimplifyConfig.fontFamilies;
+      for (const font of fontFamilies) {
+        const option = document.createElement('option');
+        option.value = font.name;
+        option.innerText = font.label;
+        option.selected = window.SimplifyThemeControl.fontFamily === font.name;
+        select.appendChild(option);
+      }
+      
+      select.addEventListener('change', (e) => {
+        window.SimplifyThemeControl.fontFamily = e.target.value;
+        window.SimplifyThemeControl.applyFontFamily();
+        this._applyFontFamily(actionsLayer);
+      });
+      
+      container.appendChild(label);
+      container.appendChild(select);
       
       return container;
     },
@@ -339,6 +435,22 @@
       const actionLabels = actionsLayer.querySelectorAll('#actions-list > div > span:last-child');
       for (const label of actionLabels) {
         label.style.fontSize = fontSize + 'px';
+      }
+    },
+
+    _applyFontFamily: function(actionsLayer) {
+      const fontFamilyObj = window.SimplifyConfig.fontFamilies.find(f => f.name === window.SimplifyThemeControl.fontFamily);
+      if (!fontFamilyObj) return;
+      
+      const fontValue = fontFamilyObj.value;
+      
+      // Update actions layer
+      actionsLayer.style.fontFamily = fontValue;
+      
+      // Update all text elements
+      const allElements = actionsLayer.querySelectorAll('*');
+      for (const el of allElements) {
+        el.style.fontFamily = fontValue;
       }
     },
 
