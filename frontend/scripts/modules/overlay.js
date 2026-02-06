@@ -89,11 +89,14 @@
       panel.id = 'simplify-panel';
       panel.style.backgroundColor = theme.bgColor;
       panel.style.width = '100%';
-      panel.style.maxHeight = '60%';
+      panel.style.maxWidth = '100%';
+      panel.style.maxHeight = '55%';
       panel.style.borderRadius = '14px 14px 0 0';
       panel.style.boxShadow = '0 -4px 16px rgba(0, 0, 0, 0.2)';
       panel.style.padding = '24px';
+      panel.style.paddingRight = '16px';
       panel.style.overflowY = 'auto';
+      panel.style.overflowX = 'hidden';
       panel.style.animation = 'slideUp 0.3s ease-out';
       panel.style.position = 'relative';
       panel.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
@@ -411,11 +414,64 @@
           0% { background-position: 100% 0; }
           100% { background-position: -100% 0; }
         }
+        
+        /* Custom scrollbar styling */
+        #simplify-panel {
+          scrollbar-width: thin;
+          scrollbar-color: rgba(0, 0, 0, 0.3) transparent;
+        }
+        
+        #simplify-panel::-webkit-scrollbar {
+          width: 8px;
+        }
+        
+        #simplify-panel::-webkit-scrollbar-track {
+          background: transparent;
+          margin-top: 14px;
+        }
+        
+        #simplify-panel::-webkit-scrollbar-thumb {
+          background-color: rgba(0, 0, 0, 0.3);
+          border-radius: 10px;
+          border: 2px solid transparent;
+          background-clip: padding-box;
+        }
+        
+        #simplify-panel::-webkit-scrollbar-thumb:hover {
+          background-color: rgba(0, 0, 0, 0.5);
+        }
       `;
       document.head.appendChild(style);
     },
 
     _fetchAndDisplayContent: async function() {
+      // Mock mode - for UI/UX development without API calls
+      const USE_MOCK_DATA = true;
+      
+      if (USE_MOCK_DATA) {
+        // Simulate network delay
+        await new Promise(resolve => setTimeout(resolve, 800));
+        
+        // Mock data for testing UI
+        const mockResult = {
+          summary_points: [
+            'This is a sample bullet point demonstrating how the TL;DR section will look',
+            'You can adjust colors, spacing, and fonts without waiting for the API',
+            'The mock data helps you iterate quickly on the design',
+            'Change this mock data to test different content lengths and formats'
+          ],
+          clean_text: 'This is sample simplified content that demonstrates how the content section will appear. You can now work on styling, themes, fonts, spacing, and other UI elements without making API calls. This text is long enough to show how multiple lines look with the current styling. Feel free to modify the mock data in the _fetchAndDisplayContent method to test different scenarios and content variations.'
+        };
+        
+        // Update TL;DR
+        this._updateTLDR(mockResult.summary_points);
+        // Update Clean Content
+        this._updateContent(mockResult.clean_text);
+        
+        return;
+      }
+      
+      // Real API mode
       const pageData = this._extractPageContent();
       
       try {
