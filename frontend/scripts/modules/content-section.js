@@ -51,6 +51,7 @@
       contentBody.setAttribute('aria-atomic', 'true');
       const loadingText = document.createElement('p');
       loadingText.id = 'content-loading-text';
+      loadingText.className = 'shimmer-text';
       loadingText.style.fontSize = this.fontSize + 'px';
       loadingText.style.lineHeight = '1.6';
       loadingText.style.color = theme.textColor;

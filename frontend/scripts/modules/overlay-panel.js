@@ -132,6 +132,27 @@
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
         }
+        @keyframes shimmer {
+          0% {
+            background-position: -200% center;
+          }
+          100% {
+            background-position: 200% center;
+          }
+        }
+        .shimmer-text {
+          background: linear-gradient(
+            90deg,
+            currentColor 25%,
+            rgba(255, 255, 255, 0.8) 50%,
+            currentColor 75%
+          );
+          background-size: 200% 100%;
+          -webkit-background-clip: text;
+          background-clip: text;
+          -webkit-text-fill-color: transparent;
+          animation: shimmer 3.5s linear infinite;
+        }
         
         /* Responsive text and layout */
         @media (max-width: 768px) {
