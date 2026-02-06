@@ -47,6 +47,8 @@
       tldr.appendChild(tldrHeader);
       
       const tldrContent = document.createElement('div');
+      tldrContent.setAttribute('aria-live', 'polite');
+      tldrContent.setAttribute('aria-atomic', 'true');
       const loadingText = document.createElement('p');
       loadingText.id = 'tldr-loading-text';
       loadingText.style.fontSize = this.fontSize + 'px';

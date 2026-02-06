@@ -47,6 +47,8 @@
       content.appendChild(contentHeader);
       
       const contentBody = document.createElement('div');
+      contentBody.setAttribute('aria-live', 'polite');
+      contentBody.setAttribute('aria-atomic', 'true');
       const loadingText = document.createElement('p');
       loadingText.id = 'content-loading-text';
       loadingText.style.fontSize = this.fontSize + 'px';

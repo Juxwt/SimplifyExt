@@ -140,10 +140,12 @@
       const tldrSection = document.getElementById('tldr-section');
       if (tldrSection) {
         tldrSection.innerHTML = `
-          <h2 style="font-size: 24px; margin-bottom: 16px; color: ${theme.headingColor}; font-weight: bold;">Error</h2>
-          <p style="font-size: 18px; line-height: 1.6; color: #ff0000;">
-            Failed to simplify page. Please try again.
-          </p>
+          <div role="alert">
+            <h2 style="font-size: 24px; margin-bottom: 16px; color: ${theme.headingColor}; font-weight: bold;">Error</h2>
+            <p style="font-size: 18px; line-height: 1.6; color: #ff0000;">
+              Failed to simplify page. Please try again.
+            </p>
+          </div>
         `;
       }
     }
