@@ -209,14 +209,23 @@
       if (actions.length === 0) return [];
       if (actions.length <= 5) return actions; // Too small to benefit from filtering
       
+      // Limit to first 100 items to avoid token limits
+      const itemsToFilter = actions.slice(0, 100);
+      
+      // Extract just the labels
+      const labels = itemsToFilter.map(a => a.label);
+      
+      // Check if using mock data
+      if (window.SimplifyConfig.USE_MOCK_DATA) {
+        console.log('Using mock action filtering...');
+        const result = await window.SimplifyMockData.filterActions(labels);
+        const filteredActions = result.valid_indices.map(idx => itemsToFilter[idx]);
+        console.log(`Mock filtered ${actions.length} actions down to ${filteredActions.length} useful actions`);
+        return filteredActions;
+      }
+      
+      // Real API mode
       try {
-        // Limit to first 100 items to avoid token limits
-        const itemsToFilter = actions.slice(0, 100);
-        
-        // Extract just the labels
-        const labels = itemsToFilter.map(a => a.label);
-        
-        // Send to API
         const response = await fetch(`${this.API_BASE_URL}/api/filter-actions`, {
           method: 'POST',
           headers: {
@@ -231,8 +240,26 @@
 
         const result = await response.json();
         
-        // Extract filtered actions using the valid indices
-        const filteredActions = result.valid_indices.map(idx => itemsToFilter[idx]);
+        let filteredActions;
+        
+        // Handle different API response formats
+        if (result.valid_indices && Array.isArray(result.valid_indices)) {
+          // New format: {valid_indices: [0, 2, 5, 7]}
+          filteredActions = result.valid_indices.map(idx => itemsToFilter[idx]);
+        } else if (result.filtered_labels && Array.isArray(result.filtered_labels)) {
+          // Old format: {filtered_labels: ["label1", "label2"]}
+          // Match labels back to original actions
+          const labelSet = new Set(result.filtered_labels);
+          filteredActions = itemsToFilter.filter(action => labelSet.has(action.label));
+        } else if (Array.isArray(result)) {
+          // Direct array format: ["label1", "label2"]
+          const labelSet = new Set(result);
+          filteredActions = itemsToFilter.filter(action => labelSet.has(action.label));
+        } else {
+          console.error('Unexpected API response format:', result);
+          // Fallback to original list
+          return actions;
+        }
         
         console.log(`Filtered ${actions.length} actions down to ${filteredActions.length} useful actions`);
         return filteredActions;

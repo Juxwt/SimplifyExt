@@ -5,8 +5,8 @@
      * Shows full-screen scrollable list of all page actions
      */
     show: async function() {
-      const overlay = window.SimplifyOverlay;
-      const theme = overlay.themes[overlay.currentTheme];
+      const currentTheme = window.SimplifyThemeControl.currentTheme;
+      const theme = window.SimplifyConfig.themes[currentTheme];
       
       // Create actions layer overlay immediately with loading state
       const actionsLayer = document.createElement('div');
@@ -123,7 +123,7 @@
     },
 
     _createThemeToggle: function(actionsLayer, theme) {
-      const overlay = window.SimplifyOverlay;
+      const currentTheme = window.SimplifyThemeControl.currentTheme;
       
       const themeContainer = document.createElement('div');
       themeContainer.style.display = 'flex';
@@ -151,15 +151,16 @@
         btn.innerHTML = `${themeOption.emoji} ${themeOption.label}`;
         btn.style.padding = '6px 12px';
         btn.style.fontSize = '13px';
-        btn.style.border = overlay.currentTheme === themeOption.name ? '2px solid #1976d2' : '1px solid #ccc';
+        btn.style.border = currentTheme === themeOption.name ? '2px solid #1976d2' : '2px solid #ccc';
         btn.style.borderRadius = '6px';
         btn.style.cursor = 'pointer';
-        btn.style.backgroundColor = overlay.currentTheme === themeOption.name ? '#e3f2fd' : 'transparent';
+        btn.style.backgroundColor = currentTheme === themeOption.name ? '#e3f2fd' : 'transparent';
         btn.style.color = theme.textColor;
         btn.style.transition = 'all 0.2s';
         
         btn.addEventListener('click', () => {
-          overlay.currentTheme = themeOption.name;
+          window.SimplifyThemeControl.currentTheme = themeOption.name;
+          window.SimplifyThemeControl.applyTheme();
           this._applyTheme(actionsLayer);
         });
         
@@ -174,7 +175,7 @@
     },
 
     _createFontSizeControl: function(actionsLayer, theme) {
-      const overlay = window.SimplifyOverlay;
+      const fontSize = window.SimplifyThemeControl.fontSize;
       
       const container = document.createElement('div');
       container.style.display = 'flex';
@@ -197,8 +198,9 @@
       decreaseBtn.style.color = theme.textColor;
       decreaseBtn.style.transition = 'all 0.2s';
       decreaseBtn.addEventListener('click', () => {
-        if (overlay.fontSize > 14) {
-          overlay.fontSize -= 2;
+        if (window.SimplifyThemeControl.fontSize > 14) {
+          window.SimplifyThemeControl.fontSize -= 2;
+          window.SimplifyThemeControl.applyFontSize();
           this._applyFontSize(actionsLayer);
         }
       });
@@ -214,8 +216,9 @@
       increaseBtn.style.color = theme.textColor;
       increaseBtn.style.transition = 'all 0.2s';
       increaseBtn.addEventListener('click', () => {
-        if (overlay.fontSize < 26) {
-          overlay.fontSize += 2;
+        if (window.SimplifyThemeControl.fontSize < 26) {
+          window.SimplifyThemeControl.fontSize += 2;
+          window.SimplifyThemeControl.applyFontSize();
           this._applyFontSize(actionsLayer);
         }
       });
@@ -228,7 +231,7 @@
     },
 
     _createActionsList: function(actions, actionsLayer, theme) {
-      const overlay = window.SimplifyOverlay;
+      const fontSize = window.SimplifyThemeControl.fontSize;
       
       const actionsList = document.createElement('div');
       actionsList.id = 'actions-list';
@@ -262,7 +265,7 @@
         // Label text
         const label = document.createElement('span');
         label.innerText = action.label;
-        label.style.fontSize = overlay.fontSize + 'px';
+        label.style.fontSize = fontSize + 'px';
         label.style.color = theme.textColor;
         label.style.flex = '1';
 
@@ -291,8 +294,8 @@
     },
 
     _applyTheme: function(actionsLayer) {
-      const overlay = window.SimplifyOverlay;
-      const theme = overlay.themes[overlay.currentTheme];
+      const currentTheme = window.SimplifyThemeControl.currentTheme;
+      const theme = window.SimplifyConfig.themes[currentTheme];
       
       // Update background
       actionsLayer.style.backgroundColor = theme.bgColor;
@@ -322,20 +325,20 @@
       for (const btn of themeButtons) {
         if (btn.innerText.includes('☀️') || btn.innerText.includes('📜')) {
           const themeName = btn.innerText.includes('☀️') ? 'light' : 'sepia';
-          btn.style.border = overlay.currentTheme === themeName ? '2px solid #1976d2' : '1px solid #ccc';
-          btn.style.backgroundColor = overlay.currentTheme === themeName ? '#e3f2fd' : 'transparent';
+          btn.style.border = currentTheme === themeName ? '2px solid #1976d2' : '2px solid #ccc';
+          btn.style.backgroundColor = currentTheme === themeName ? '#e3f2fd' : 'transparent';
           btn.style.color = theme.textColor;
         }
       }
     },
 
     _applyFontSize: function(actionsLayer) {
-      const overlay = window.SimplifyOverlay;
+      const fontSize = window.SimplifyThemeControl.fontSize;
       
       // Update action labels
       const actionLabels = actionsLayer.querySelectorAll('#actions-list > div > span:last-child');
       for (const label of actionLabels) {
-        label.style.fontSize = overlay.fontSize + 'px';
+        label.style.fontSize = fontSize + 'px';
       }
     },
 

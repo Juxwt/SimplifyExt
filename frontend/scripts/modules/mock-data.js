@@ -52,6 +52,46 @@
         return this.defaultResponse;
       }
       return this.scenarios[scenario] || this.defaultResponse;
+    },
+
+    // Mock action filtering (simulates AI removing ads, tracking, footer links)
+    // Returns indices of actions to keep (filters out noise)
+    filterActions: function(labels) {
+      // Simulate delay
+      return new Promise(resolve => {
+        setTimeout(() => {
+          // Simple mock filtering logic: keep items that don't look like ads or tracking
+          const noiseKeywords = [
+            'cookie', 'privacy policy', 'terms of service', 'terms & conditions',
+            'subscribe newsletter', 'follow us', 'social media', 'advertisement',
+            'sponsored', 'ad', 'tracking', 'footer', 'copyright', '©', 
+            'all rights reserved', 'facebook', 'twitter', 'instagram', 'linkedin',
+            'youtube', 'share', 'tweet', 'like us', 'follow', 'rss feed',
+            'sitemap', 'contact us', 'about us', 'careers', 'legal', 'dmca'
+          ];
+          
+          const validIndices = [];
+          labels.forEach((label, index) => {
+            const lowerLabel = label.toLowerCase();
+            const isNoise = noiseKeywords.some(keyword => lowerLabel.includes(keyword));
+            
+            // Keep if it's NOT noise
+            if (!isNoise) {
+              validIndices.push(index);
+            }
+          });
+          
+          // If we filtered everything out, return first 10 (fail-safe)
+          if (validIndices.length === 0) {
+            for (let i = 0; i < Math.min(10, labels.length); i++) {
+              validIndices.push(i);
+            }
+          }
+          
+          console.log(`Mock filter: ${labels.length} actions → ${validIndices.length} valid actions`);
+          resolve({ valid_indices: validIndices });
+        }, 600); // Simulate API delay
+      });
     }
   };
 })();
