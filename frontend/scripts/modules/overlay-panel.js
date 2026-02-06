@@ -125,6 +125,10 @@
           0% { background-position: 100% 0; }
           100% { background-position: -100% 0; }
         }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
         
         /* Responsive text and layout */
         @media (max-width: 768px) {

@@ -1,6 +1,8 @@
 // TL;DR Section Component - Handles TL;DR display and updates
 (function() {
   window.SimplifyTLDRSection = {
+    _loadingInterval: null,
+    
     get themes() {
       return window.SimplifyConfig.themes;
     },
@@ -45,21 +47,37 @@
       tldr.appendChild(tldrHeader);
       
       const tldrContent = document.createElement('div');
-      tldrContent.innerHTML = `
-        <div style="display: flex; align-items: center; gap: 12px;">
-          <div style="flex: 1; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden;">
-            <div style="width: 100%; height: 100%; background: linear-gradient(90deg, #1976d2 0%, #64b5f6 50%, #1976d2 100%); background-size: 200% 100%; animation: loadingBar 2.5s ease-in-out infinite;"></div>
-          </div>
-          <span style="font-size: 14px; color: ${theme.textColor};">Loading...</span>
-        </div>
-      `;
+      const loadingText = document.createElement('p');
+      loadingText.id = 'tldr-loading-text';
+      loadingText.style.fontSize = this.fontSize + 'px';
+      loadingText.style.lineHeight = '1.6';
+      loadingText.style.color = theme.textColor;
+      loadingText.innerText = '✨ Analyzing page content.';
+      
+      tldrContent.appendChild(loadingText);
       tldr.appendChild(tldrContent);
+      
+      // Animate dots
+      let dotCount = 1;
+      this._loadingInterval = setInterval(() => {
+        const loadingEl = document.getElementById('tldr-loading-text');
+        if (loadingEl) {
+          dotCount = (dotCount % 3) + 1;
+          loadingEl.innerText = '✨ Analyzing page content' + '.'.repeat(dotCount);
+        }
+      }, 500);
       
       return tldr;
     },
 
     // Update with actual data
     update: function(summaryPoints) {
+      // Clear loading animation
+      if (this._loadingInterval) {
+        clearInterval(this._loadingInterval);
+        this._loadingInterval = null;
+      }
+      
       const tldrSection = document.getElementById('tldr-section');
       if (!tldrSection || !summaryPoints) return;
 
