@@ -49,6 +49,9 @@
       // Add to page
       document.body.appendChild(overlay);
 
+      // Apply initial font family
+      window.SimplifyThemeControl.applyFontFamily();
+
       // Close on background click
       overlay.addEventListener('click', (e) => {
         if (e.target === overlay) {

@@ -57,7 +57,10 @@
       panel.style.animation = 'slideUp 0.3s ease-out';
       panel.style.position = 'relative';
       panel.style.pointerEvents = 'auto';
-      panel.style.fontFamily = 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
+      
+      // Font family will be set by SimplifyThemeControl.applyFontFamily()
+      const fontFamilyObj = window.SimplifyConfig.fontFamilies.find(f => f.name === window.SimplifyThemeControl.fontFamily);
+      panel.style.fontFamily = fontFamilyObj ? fontFamilyObj.value : 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif';
       
       // Prevent clicks inside panel from closing overlay
       panel.addEventListener('click', (e) => e.stopPropagation());

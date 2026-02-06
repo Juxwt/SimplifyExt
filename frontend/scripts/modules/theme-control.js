@@ -3,9 +3,14 @@
   window.SimplifyThemeControl = {
     currentTheme: window.SimplifyConfig.DEFAULT_THEME,
     fontSize: window.SimplifyConfig.DEFAULT_FONT_SIZE,
+    fontFamily: window.SimplifyConfig.DEFAULT_FONT_FAMILY,
 
     get themes() {
       return window.SimplifyConfig.themes;
+    },
+    
+    get fontFamilies() {
+      return window.SimplifyConfig.fontFamilies;
     },
 
     // Create the theme toggle controls
@@ -54,6 +59,10 @@
       // Add font size controls
       const fontSizeControl = this._createFontSizeControl();
       themeContainer.appendChild(fontSizeControl);
+      
+      // Add font family controls
+      const fontFamilyControl = this._createFontFamilyControl();
+      themeContainer.appendChild(fontFamilyControl);
       
       return themeContainer;
     },
@@ -107,6 +116,47 @@
       container.appendChild(label);
       container.appendChild(decreaseBtn);
       container.appendChild(increaseBtn);
+      
+      return container;
+    },
+
+    // Create font family dropdown
+    _createFontFamilyControl: function() {
+      const container = document.createElement('div');
+      container.style.display = 'flex';
+      container.style.alignItems = 'center';
+      container.style.gap = '8px';
+      
+      const label = document.createElement('span');
+      label.innerText = 'Font:';
+      label.style.fontSize = '14px';
+      label.style.color = this.themes[this.currentTheme].textColor;
+      
+      const select = document.createElement('select');
+      select.style.padding = '6px 12px';
+      select.style.fontSize = '13px';
+      select.style.border = '1px solid #ccc';
+      select.style.borderRadius = '6px';
+      select.style.cursor = 'pointer';
+      select.style.backgroundColor = 'transparent';
+      select.style.color = this.themes[this.currentTheme].textColor;
+      select.style.transition = 'all 0.2s';
+      
+      for (const font of this.fontFamilies) {
+        const option = document.createElement('option');
+        option.value = font.name;
+        option.innerText = font.label;
+        option.selected = this.fontFamily === font.name;
+        select.appendChild(option);
+      }
+      
+      select.addEventListener('change', (e) => {
+        this.fontFamily = e.target.value;
+        this.applyFontFamily();
+      });
+      
+      container.appendChild(label);
+      container.appendChild(select);
       
       return container;
     },
@@ -174,6 +224,34 @@
       const actionsLayer = document.getElementById('simplify-actions-layer');
       if (actionsLayer && window.SimplifyActionsLayer) {
         window.SimplifyActionsLayer._applyFontSize(actionsLayer);
+      }
+    },
+
+    // Apply font family to content
+    applyFontFamily: function() {
+      const fontFamilyObj = this.fontFamilies.find(f => f.name === this.fontFamily);
+      if (!fontFamilyObj) return;
+      
+      const fontValue = fontFamilyObj.value;
+      
+      // Update overlay panel
+      const panel = document.getElementById('simplify-panel');
+      if (panel) {
+        panel.style.fontFamily = fontValue;
+      }
+      
+      // Update all text elements
+      const allElements = document.querySelectorAll('#simplify-overlay *');
+      for (const el of allElements) {
+        if (el.id !== 'simplify-overlay' && el.id !== 'simplify-panel') {
+          el.style.fontFamily = fontValue;
+        }
+      }
+      
+      // Also update actions layer if it exists
+      const actionsLayer = document.getElementById('simplify-actions-layer');
+      if (actionsLayer && window.SimplifyActionsLayer) {
+        window.SimplifyActionsLayer._applyFontFamily(actionsLayer);
       }
     }
   };

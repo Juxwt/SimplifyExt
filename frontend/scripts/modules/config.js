@@ -8,6 +8,7 @@
     // Default Settings
     DEFAULT_THEME: 'light',
     DEFAULT_FONT_SIZE: 18,
+    DEFAULT_FONT_FAMILY: 'system',
     MIN_FONT_SIZE: 14,
     MAX_FONT_SIZE: 26,
     FONT_SIZE_STEP: 2,
@@ -42,6 +43,16 @@
     themeOptions: [
       { name: 'light', emoji: '☀️', label: 'Light' },
       { name: 'sepia', emoji: '📜', label: 'Sepia' }
+    ],
+    
+    // Available font families
+    fontFamilies: [
+      { name: 'system', label: 'System Default', value: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif' },
+      { name: 'arial', label: 'Arial', value: 'Arial, Helvetica, sans-serif' },
+      { name: 'georgia', label: 'Georgia', value: 'Georgia, "Times New Roman", serif' },
+      { name: 'courier', label: 'Courier', value: '"Courier New", Courier, monospace' },
+      { name: 'verdana', label: 'Verdana', value: 'Verdana, Geneva, sans-serif' },
+      { name: 'times', label: 'Times New Roman', value: '"Times New Roman", Times, serif' }
     ],
     
     // Panel Dimensions
