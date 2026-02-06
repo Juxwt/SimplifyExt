@@ -106,6 +106,9 @@
       progressBar.value = '0';
       progressBar.style.width = '100%';
       progressBar.style.cursor = 'pointer';
+      progressBar.setAttribute('aria-label', 'Playback Progress');
+      progressBar.setAttribute('aria-valuemin', '0');
+      progressBar.setAttribute('aria-valuemax', '100');
 
       progressContainer.appendChild(progressLabel);
       progressContainer.appendChild(progressBar);
@@ -198,6 +201,7 @@
       volumeSlider.value = this.currentVolume;
       volumeSlider.style.flex = '1';
       volumeSlider.style.cursor = 'pointer';
+      volumeSlider.setAttribute('aria-label', 'Volume Control');
 
       const volumeValue = document.createElement('span');
       volumeValue.innerText = `${Math.round(this.currentVolume * 100)}%`;
@@ -229,6 +233,7 @@
       voiceSelect.style.borderRadius = '4px';
       voiceSelect.style.border = '1px solid #ccc';
       voiceSelect.style.fontSize = '14px';
+      voiceSelect.setAttribute('aria-label', 'Select Voice');
 
       if (this.availableVoices.length === 0) {
         this.availableVoices = window.speechSynthesis.getVoices();

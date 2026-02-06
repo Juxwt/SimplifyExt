@@ -143,11 +143,60 @@
       const tldrSection = document.getElementById('tldr-section');
       if (tldrSection) {
         tldrSection.innerHTML = `
-          <h2 style="font-size: 24px; margin-bottom: 16px; color: ${theme.headingColor}; font-weight: bold;">Error</h2>
-          <p style="font-size: 18px; line-height: 1.6; color: #ff0000;">
-            Failed to simplify page. Please try again.
-          </p>
+          <div role="alert">
+            <h2 style="font-size: 24px; margin-bottom: 16px; color: ${theme.headingColor}; font-weight: bold;">Error</h2>
+            <p style="font-size: 18px; line-height: 1.6; color: #ff0000; margin-bottom: 20px;">
+              Failed to simplify page. Please try again.
+            </p>
+            <button id="simplify-retry-btn" style="
+              background: #1976d2;
+              color: #fff;
+              border: none;
+              border-radius: 4px;
+              padding: 10px 20px;
+              font-size: 16px;
+              cursor: pointer;
+              font-weight: 500;
+              transition: background 0.2s;
+            ">
+              Retry
+            </button>
+          </div>
         `;
+        
+        // Add click handler for retry button
+        const retryBtn = document.getElementById('simplify-retry-btn');
+        if (retryBtn) {
+          retryBtn.addEventListener('click', async () => {
+            // Disable button and show loading state
+            retryBtn.disabled = true;
+            retryBtn.textContent = 'Retrying...';
+            retryBtn.style.background = '#999';
+            retryBtn.style.cursor = 'not-allowed';
+            
+            // Clear the error and show loading
+            tldrSection.innerHTML = `
+              <div style="text-align: center; padding: 20px;">
+                <p style="font-size: 18px; color: ${theme.textColor};">Loading summary...</p>
+              </div>
+            `;
+            
+            // Retry fetching content
+            await this._fetchAndDisplayContent();
+          });
+          
+          // Add hover effect
+          retryBtn.addEventListener('mouseenter', () => {
+            if (!retryBtn.disabled) {
+              retryBtn.style.background = '#1565c0';
+            }
+          });
+          retryBtn.addEventListener('mouseleave', () => {
+            if (!retryBtn.disabled) {
+              retryBtn.style.background = '#1976d2';
+            }
+          });
+        }
       }
     }
   };
