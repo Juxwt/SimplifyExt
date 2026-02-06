@@ -3,7 +3,7 @@
   window.SimplifyConfig = {
     // API Configuration
     API_BASE_URL: 'https://simplify-ext.vercel.app',
-    USE_MOCK_DATA: false, // Toggle between mock and real API
+    USE_MOCK_DATA: true, // Toggle between mock and real API
     
     // Default Settings
     DEFAULT_THEME: 'light',
