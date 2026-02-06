@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Assistive Simplify Extension",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Simplifies web pages and highlights main actions for accessibility.",
   "permissions": ["scripting", "activeTab"],
   "host_permissions": ["<all_urls>"],
@@ -26,9 +26,5 @@
         "scripts/content.js"
       ]
     }
-  ],
-  "action": {
-    "default_popup": "popup/popup.html",
-    "default_title": "Simplify Page"
-  }
+  ]
 }
